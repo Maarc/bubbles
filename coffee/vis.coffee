@@ -1,4 +1,4 @@
-# Note: "year" has been replaced by "effort"
+# Note: "effort" has been replaced by "effort"
 
 class BubbleChart
   constructor: (data) ->
@@ -61,7 +61,7 @@ class BubbleChart
         application: d.applicationPublicId
         org: d.applicationPublicId
         group: d.threatLevel
-        year: d.effort
+        effort: d.effort
         x: Math.random() * 900
         y: Math.random() * 800
       }
@@ -141,7 +141,7 @@ class BubbleChart
       d.x = d.x + (@center.x - d.x) * (@damper + 0.02) * alpha
       d.y = d.y + (@center.y - d.y) * (@damper + 0.02) * alpha
 
-  # sets the display of bubbles to be separated into each year. Does this by calling move_towards_effort
+  # sets the display of bubbles to be separated into each effort. Does this by calling move_towards_effort
   display_by_effort: () =>
     @force.gravity(@layout_gravity)
       .charge(this.charge)
@@ -157,29 +157,29 @@ class BubbleChart
   # move all circles to their associated @effort_centers
   move_towards_effort: (alpha) =>
     (d) =>
-      target = @effort_centers[d.year]
+      target = @effort_centers[d.effort]
       d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
       d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
 
-  # Method to display year titles
+  # Method to display effort titles
   display_efforts: () =>
     efforts_x = {"Low": 230, "Medium": @width / 2, "High": @width - 230}
     efforts_data = d3.keys(efforts_x)
-    years = @vis.selectAll(".years")
+    efforts = @vis.selectAll(".efforts")
       .data(efforts_data)
 
-    years.enter().append("text")
-      .attr("class", "years")
+    efforts.enter().append("text")
+      .attr("class", "efforts")
       .attr("x", (d) => efforts_x[d] )
       .attr("y", 40)
       .attr("text-anchor", "middle")
       .text((d) -> d)
 
-  # Method to hide year titles
+  # Method to hide effort titles
   hide_efforts: () =>
-    years = @vis.selectAll(".years").remove()
+    efforts = @vis.selectAll(".efforts").remove()
 
-  # sets the display of bubbles to be separated into each year. Does this by calling move_towards_effort
+  # sets the display of bubbles to be separated into each effort. Does this by calling move_towards_effort
   display_in_matrix: () =>
     @force.gravity(@layout_gravity)
       .charge(this.charge)
@@ -199,7 +199,7 @@ class BubbleChart
     content = "<span class=\"name\">Application:</span><span class=\"value\"> #{data.application}</span><br/>"
     content +="<span class=\"name\">Library:</span><span class=\"value\"> #{data.name}</span><br/>"
     content +="<span class=\"name\">Threat level:</span><span class=\"value\"> #{addCommas(data.value)}</span><br/>"
-    content +="<span class=\"name\">Effort:</span><span class=\"value\"> #{data.year}</span>"
+    content +="<span class=\"name\">Effort:</span><span class=\"value\"> #{data.effort}</span>"
     @tooltip.showTooltip(content,d3.event)
 
   # hides details tooltip
