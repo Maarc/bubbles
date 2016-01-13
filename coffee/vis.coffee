@@ -3,7 +3,7 @@ class BubbleChart
   constructor: (data) ->
     @data = data
     @width = 940
-    @height = 600
+    @height = 700
 
     @tooltip = CustomTooltip("gates_tooltip", 240)
 
@@ -12,9 +12,9 @@ class BubbleChart
     # used
     @center = {x: @width / 2, y: @height / 2}
     @year_centers = {
-      "2008": {x: @width / 3, y: @height / 2},
-      "2009": {x: @width / 2, y: @height / 2},
-      "2010": {x: 2 * @width / 3, y: @height / 2}
+      "Low": {x: @width / 3, y: @height / 2},
+      "Medium": {x: @width / 2, y: @height / 2},
+      "High": {x: 2 * @width / 3, y: @height / 2}
     }
 
     # used when setting up force and
@@ -30,13 +30,13 @@ class BubbleChart
 
     # nice looking colors - no reason to buck the trend
     @fill_color = d3.scale.ordinal()
-      .domain(["low", "medium", "high"])
-      .range(["#d84b2a", "#beccae", "#7aa25c"])
+      .domain(["moderate", "severe", "critical"])
+      .range(["#ffff26", "#ff8000", "#ff0000"])
 
     # use the max total_amount in the data as the max in the scale's domain
-    max_amount = d3.max(@data, (d) -> parseInt(d.total_amount))
-    @radius_scale = d3.scale.pow().exponent(0.5).domain([0, max_amount]).range([2, 85])
-    
+    max_amount = d3.max(@data, (d) -> parseInt(d.maximumThreatValue))
+    @radius_scale = d3.scale.pow().exponent(1.7).domain([0, max_amount]).range([5, 40])
+
     this.create_nodes()
     this.create_vis()
 
@@ -44,16 +44,18 @@ class BubbleChart
   # that will serve as the data behind each
   # bubble in the vis, then add each node
   # to @nodes to be used later
+
   create_nodes: () =>
     @data.forEach (d) =>
       node = {
         id: d.id
-        radius: @radius_scale(parseInt(d.total_amount))
-        value: d.total_amount
-        name: d.grant_title
-        org: d.organization
-        group: d.group
-        year: d.start_year
+        radius: @radius_scale(parseInt(d.maximumThreatValue))
+        value: d.maximumThreatValue
+        name: d.gav
+        application: d.applicationPublicId
+        org: d.applicationPublicId
+        group: d.threatLevel
+        year: d.effort
         x: Math.random() * 900
         y: Math.random() * 800
       }
@@ -61,8 +63,7 @@ class BubbleChart
 
     @nodes.sort (a,b) -> b.value - a.value
 
-
-  # create svg at #vis and then 
+  # create svg at #vis and then
   # create circle representation for each node
   create_vis: () =>
     @vis = d3.select("#vis").append("svg")
@@ -73,7 +74,7 @@ class BubbleChart
     @circles = @vis.selectAll("circle")
       .data(@nodes, (d) -> d.id)
 
-    # used because we need 'this' in the 
+    # used because we need 'this' in the
     # mouse callbacks
     that = this
 
@@ -97,9 +98,9 @@ class BubbleChart
   # Charge is proportional to the diameter of the
   # circle (which is stored in the radius attribute
   # of the circle's associated data.
-  # This is done to allow for accurate collision 
+  # This is done to allow for accurate collision
   # detection with nodes of different sizes.
-  # Charge is negative because we want nodes to 
+  # Charge is negative because we want nodes to
   # repel.
   # Dividing by 8 scales down the charge to be
   # appropriate for the visualization dimensions.
@@ -148,7 +149,7 @@ class BubbleChart
 
     this.display_years()
 
-  # move all circles to their associated @year_centers 
+  # move all circles to their associated @year_centers
   move_towards_year: (alpha) =>
     (d) =>
       target = @year_centers[d.year]
@@ -157,7 +158,7 @@ class BubbleChart
 
   # Method to display year titles
   display_years: () =>
-    years_x = {"2008": 160, "2009": @width / 2, "2010": @width - 160}
+    years_x = {"Low": 230, "Medium": @width / 2, "High": @width - 230}
     years_data = d3.keys(years_x)
     years = @vis.selectAll(".years")
       .data(years_data)
@@ -169,15 +170,19 @@ class BubbleChart
       .attr("text-anchor", "middle")
       .text((d) -> d)
 
-  # Method to hide year titiles
+  # Method to hide year titles
   hide_years: () =>
     years = @vis.selectAll(".years").remove()
 
+#id,applicationPublicId,version,latestAvailableVersion,closestSecureVersion,gav,securityRisk,maximumThreatValue,threatLevel,effort,rationalization
+#5,ola-ihnw-ear-1.2.12.ear,1.6.10,null,1.6.19,org.apache.ws.security:wss4j:jar:1.6.10,80.9,7.5,critical,High,Nee
+
   show_details: (data, i, element) =>
     d3.select(element).attr("stroke", "black")
-    content = "<span class=\"name\">Title:</span><span class=\"value\"> #{data.name}</span><br/>"
-    content +="<span class=\"name\">Amount:</span><span class=\"value\"> $#{addCommas(data.value)}</span><br/>"
-    content +="<span class=\"name\">Year:</span><span class=\"value\"> #{data.year}</span>"
+    content = "<span class=\"name\">Application:</span><span class=\"value\"> #{data.application}</span><br/>"
+    content +="<span class=\"name\">Library:</span><span class=\"value\"> #{data.name}</span><br/>"
+    content +="<span class=\"name\">Threat level:</span><span class=\"value\"> #{addCommas(data.value)}</span><br/>"
+    content +="<span class=\"name\">Effort:</span><span class=\"value\"> #{data.year}</span>"
     @tooltip.showTooltip(content,d3.event)
 
 
@@ -205,4 +210,4 @@ $ ->
     else
       root.display_all()
 
-  d3.csv "data/gates_money.csv", render_vis
+  d3.csv "data/data.csv", render_vis

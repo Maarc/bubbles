@@ -4,7 +4,7 @@ a, a:visited, a:active {
 
 #vis {
   width: 940px;
-  height: 600px;
+  height: 700px;
   clear: both;
   margin-bottom: 10px;
 }
@@ -48,3 +48,10 @@ footer {
   font-weight:bold;
 }
 
+body {
+  padding-top: 50px;
+}
+.starter-template {
+  padding: 40px 15px;
+  text-align: center;
+}
