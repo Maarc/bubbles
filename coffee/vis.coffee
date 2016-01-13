@@ -126,7 +126,7 @@ class BubbleChart
           .attr("cy", (d) -> d.y)
     @force.start()
 
-    this.hide_years()
+    this.hide_efforts()
 
   # Moves all circles towards the @center
   # of the visualization
@@ -136,28 +136,28 @@ class BubbleChart
       d.y = d.y + (@center.y - d.y) * (@damper + 0.02) * alpha
 
   # sets the display of bubbles to be separated
-  # into each year. Does this by calling move_towards_year
-  display_by_year: () =>
+  # into each year. Does this by calling move_towards_effort
+  display_by_effort: () =>
     @force.gravity(@layout_gravity)
       .charge(this.charge)
       .friction(0.9)
       .on "tick", (e) =>
-        @circles.each(this.move_towards_year(e.alpha))
+        @circles.each(this.move_towards_effort(e.alpha))
           .attr("cx", (d) -> d.x)
           .attr("cy", (d) -> d.y)
     @force.start()
 
-    this.display_years()
+    this.display_efforts()
 
   # move all circles to their associated @year_centers
-  move_towards_year: (alpha) =>
+  move_towards_effort: (alpha) =>
     (d) =>
       target = @year_centers[d.year]
       d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
       d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
 
   # Method to display year titles
-  display_years: () =>
+  display_efforts: () =>
     years_x = {"Low": 230, "Medium": @width / 2, "High": @width - 230}
     years_data = d3.keys(years_x)
     years = @vis.selectAll(".years")
@@ -171,11 +171,23 @@ class BubbleChart
       .text((d) -> d)
 
   # Method to hide year titles
-  hide_years: () =>
+  hide_efforts: () =>
     years = @vis.selectAll(".years").remove()
 
-#id,applicationPublicId,version,latestAvailableVersion,closestSecureVersion,gav,securityRisk,maximumThreatValue,threatLevel,effort,rationalization
-#5,ola-ihnw-ear-1.2.12.ear,1.6.10,null,1.6.19,org.apache.ws.security:wss4j:jar:1.6.10,80.9,7.5,critical,High,Nee
+  # sets the display of bubbles to be separated
+  # into each year. Does this by calling move_towards_effort
+  display_in_matrix: () =>
+    @force.gravity(@layout_gravity)
+      .charge(this.charge)
+      .friction(0.9)
+      .on "tick", (e) =>
+        @circles.each(this.move_towards_effort(e.alpha))
+          .attr("cx", (d) -> d.x)
+          .attr("cy", (d) -> d.y)
+    @force.start()
+
+    this.display_efforts()
+
 
   show_details: (data, i, element) =>
     d3.select(element).attr("stroke", "black")
@@ -202,12 +214,17 @@ $ ->
     root.display_all()
   root.display_all = () =>
     chart.display_group_all()
-  root.display_year = () =>
-    chart.display_by_year()
+  root.display_effort = () =>
+    chart.display_by_effort()
+  root.display_matrix = () =>
+    chart.display_in_matrix()
   root.toggle_view = (view_type) =>
-    if view_type == 'year'
-      root.display_year()
+    if view_type == 'effort'
+      root.display_effort()
+    else if view_type == 'matrix'
+      root.display_matrix()
     else
       root.display_all()
 
-  d3.csv "data/data.csv", render_vis
+  d3.csv "data/ots-all-applications.csv", render_vis
+  #d3.csv "data/data.csv", render_vis
