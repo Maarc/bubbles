@@ -4,7 +4,7 @@ class BubbleChart
   constructor: (data) ->
     @data = data
     @width = 940
-    @height = 700
+    @height = 740
 
     @tooltip = CustomTooltip("gates_tooltip", 240)
 
@@ -18,9 +18,15 @@ class BubbleChart
       "High": {x: 2 * @width / 3, y: @height / 2}
     }
     @threat_centers = {
-      "moderate": {x: @width / 2, y: @height / 3},
-      "severe": {x: @width / 2, y: @height / 2},
-      "critical": {x: @width / 3, y: 2 * @height / 3}
+      "moderateLow": {x: @width / 3, y: 2*@height/3},
+      "moderateMedium": {x: @width / 2, y: 2*@height/3},
+      "moderateHigh": {x: 2 * @width / 3, y: 2*@height/3},
+      "severeLow": {x: @width / 3, y: @height/2},
+      "severeMedium": {x: @width / 2, y: @height/2},
+      "severeHigh": {x: 2 * @width / 3, y: @height/2},
+      "criticalLow": {x: @width / 3, y: @height/3} ,
+      "criticalMedium": {x: @width / 2, y: @height/3},
+      "criticalHigh": {x: 2 * @width / 3, y: @height/3}
     }
 
     # used when setting up force and
@@ -41,7 +47,7 @@ class BubbleChart
 
     # use the max total_amount in the data as the max in the scale's domain
     max_amount = d3.max(@data, (d) -> parseInt(d.maximumThreatValue))
-    @radius_scale = d3.scale.pow().exponent(1.7).domain([0, max_amount]).range([5, 40])
+    @radius_scale = d3.scale.pow().exponent(1.7).domain([0, max_amount]).range([4, 35])
 
     this.create_nodes()
     this.create_vis()
@@ -62,8 +68,8 @@ class BubbleChart
         org: d.applicationPublicId
         group: d.threatLevel
         effort: d.effort
-        x: Math.random() * 900
-        y: Math.random() * 800
+        x: Math.random() * @width
+        y: Math.random() * @height
       }
       @nodes.push node
 
@@ -133,6 +139,7 @@ class BubbleChart
     @force.start()
 
     this.hide_efforts()
+    this.hide_threats()
 
   # Moves all circles towards the @center
   # of the visualization
@@ -152,7 +159,22 @@ class BubbleChart
           .attr("cy", (d) -> d.y)
     @force.start()
 
+    this.hide_threats()
     this.display_efforts()
+
+  # sets the display of bubbles to be separated into each effort. Does this by calling move_towards_threat
+  display_in_matrix: () =>
+    @force.gravity(@layout_gravity)
+      .charge(this.charge)
+      .friction(0.9)
+      .on "tick", (e) =>
+        @circles.each(this.move_towards_threat(e.alpha))
+          .attr("cx", (d) -> d.x)
+          .attr("cy", (d) -> d.y)
+    @force.start()
+
+    this.display_efforts()
+    this.display_threats()
 
   # move all circles to their associated @effort_centers
   move_towards_effort: (alpha) =>
@@ -160,6 +182,15 @@ class BubbleChart
       target = @effort_centers[d.effort]
       d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
       d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
+
+  # move all circles to their associated @threat_centers
+  move_towards_threat: (alpha) =>
+    (d) =>
+      #console.log d.group
+      target = @threat_centers[d.group+d.effort]
+      d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
+      d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
+
 
   # Method to display effort titles
   display_efforts: () =>
@@ -179,18 +210,24 @@ class BubbleChart
   hide_efforts: () =>
     efforts = @vis.selectAll(".efforts").remove()
 
-  # sets the display of bubbles to be separated into each effort. Does this by calling move_towards_effort
-  display_in_matrix: () =>
-    @force.gravity(@layout_gravity)
-      .charge(this.charge)
-      .friction(0.9)
-      .on "tick", (e) =>
-        @circles.each(this.move_towards_effort(e.alpha))
-          .attr("cx", (d) -> d.x)
-          .attr("cy", (d) -> d.y)
-    @force.start()
 
-    this.display_efforts()
+  # Method to display effort titles
+  display_threats: () =>
+    threats_y = {"Critical": 180+40, "Severe": @height/2+40, "Moderate": @height-180+40}
+    threats_data = d3.keys(threats_y)
+    threats = @vis.selectAll(".threats")
+      .data(threats_data)
+
+    threats.enter().append("text")
+      .attr("class", "threats")
+      .attr("x", 45 )
+      .attr("y", (d) => threats_y[d])
+      .attr("text-anchor", "middle")
+      .text((d) -> d)
+
+  # Method to hide threat titles
+  hide_threats: () =>
+    threats = @vis.selectAll(".threats").remove()
 
 
   # displays details tooltip
@@ -231,5 +268,4 @@ $ ->
     else
       root.display_all()
 
-  d3.csv "data/ots-all-applications.csv", render_vis
-  #d3.csv "data/data.csv", render_vis
+  d3.csv "data/data.csv", render_vis

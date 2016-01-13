@@ -3,8 +3,8 @@ a, a:visited, a:active {
 }
 
 #vis {
-  width: 940px;
-  height: 700px;
+  width: 900px;
+  height: 740px;
   clear: both;
   margin-bottom: 10px;
 }
@@ -17,7 +17,7 @@ footer {
   margin-top: 10px;
 }
 
-.efforts .threats {
+.efforts, .threats {
   font-size: 21px;
   fill: #aaa;
 }
