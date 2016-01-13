@@ -1,3 +1,4 @@
+# Note: "year" has been replaced by "effort"
 
 class BubbleChart
   constructor: (data) ->
@@ -11,10 +12,15 @@ class BubbleChart
     # depending on which view is currently being
     # used
     @center = {x: @width / 2, y: @height / 2}
-    @year_centers = {
+    @effort_centers = {
       "Low": {x: @width / 3, y: @height / 2},
       "Medium": {x: @width / 2, y: @height / 2},
       "High": {x: 2 * @width / 3, y: @height / 2}
+    }
+    @threat_centers = {
+      "moderate": {x: @width / 2, y: @height / 3},
+      "severe": {x: @width / 2, y: @height / 2},
+      "critical": {x: @width / 3, y: 2 * @height / 3}
     }
 
     # used when setting up force and
@@ -135,8 +141,7 @@ class BubbleChart
       d.x = d.x + (@center.x - d.x) * (@damper + 0.02) * alpha
       d.y = d.y + (@center.y - d.y) * (@damper + 0.02) * alpha
 
-  # sets the display of bubbles to be separated
-  # into each year. Does this by calling move_towards_effort
+  # sets the display of bubbles to be separated into each year. Does this by calling move_towards_effort
   display_by_effort: () =>
     @force.gravity(@layout_gravity)
       .charge(this.charge)
@@ -149,23 +154,23 @@ class BubbleChart
 
     this.display_efforts()
 
-  # move all circles to their associated @year_centers
+  # move all circles to their associated @effort_centers
   move_towards_effort: (alpha) =>
     (d) =>
-      target = @year_centers[d.year]
+      target = @effort_centers[d.year]
       d.x = d.x + (target.x - d.x) * (@damper + 0.02) * alpha * 1.1
       d.y = d.y + (target.y - d.y) * (@damper + 0.02) * alpha * 1.1
 
   # Method to display year titles
   display_efforts: () =>
-    years_x = {"Low": 230, "Medium": @width / 2, "High": @width - 230}
-    years_data = d3.keys(years_x)
+    efforts_x = {"Low": 230, "Medium": @width / 2, "High": @width - 230}
+    efforts_data = d3.keys(efforts_x)
     years = @vis.selectAll(".years")
-      .data(years_data)
+      .data(efforts_data)
 
     years.enter().append("text")
       .attr("class", "years")
-      .attr("x", (d) => years_x[d] )
+      .attr("x", (d) => efforts_x[d] )
       .attr("y", 40)
       .attr("text-anchor", "middle")
       .text((d) -> d)
@@ -174,8 +179,7 @@ class BubbleChart
   hide_efforts: () =>
     years = @vis.selectAll(".years").remove()
 
-  # sets the display of bubbles to be separated
-  # into each year. Does this by calling move_towards_effort
+  # sets the display of bubbles to be separated into each year. Does this by calling move_towards_effort
   display_in_matrix: () =>
     @force.gravity(@layout_gravity)
       .charge(this.charge)
@@ -189,6 +193,7 @@ class BubbleChart
     this.display_efforts()
 
 
+  # displays details tooltip
   show_details: (data, i, element) =>
     d3.select(element).attr("stroke", "black")
     content = "<span class=\"name\">Application:</span><span class=\"value\"> #{data.application}</span><br/>"
@@ -197,7 +202,7 @@ class BubbleChart
     content +="<span class=\"name\">Effort:</span><span class=\"value\"> #{data.year}</span>"
     @tooltip.showTooltip(content,d3.event)
 
-
+  # hides details tooltip
   hide_details: (data, i, element) =>
     d3.select(element).attr("stroke", (d) => d3.rgb(@fill_color(d.group)).darker())
     @tooltip.hideTooltip()
